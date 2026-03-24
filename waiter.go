@@ -8,22 +8,22 @@ import (
 
 var ErrNotFound = errors.New("listener not found")
 
-type listener[T any] struct {
+type Listener[T any] struct {
 	store sync.Map // map[string]chan T
 }
 
-func NewWaiter[T any]() *listener[T] {
-	return &listener[T]{}
+func NewWaiter[T any]() *Listener[T] {
+	return &Listener[T]{}
 }
 
 // Register: buat slot untuk nunggu response
-func (l *listener[T]) Register(key string) {
+func (l *Listener[T]) Register(key string) {
 	ch := make(chan T, 1) // buffered biar tidak blocking
 	l.store.Store(key, ch)
 }
 
 // Listen: tunggu response (pakai context biar bisa timeout)
-func (l *listener[T]) Listen(ctx context.Context, key string) (T, error) {
+func (l *Listener[T]) Listen(ctx context.Context, key string) (T, error) {
 	val, ok := l.store.Load(key)
 	if !ok {
 		var zero T
@@ -42,7 +42,7 @@ func (l *listener[T]) Listen(ctx context.Context, key string) (T, error) {
 }
 
 // Resolve: kirim response ke listener
-func (l *listener[T]) Resolve(key string, data T) {
+func (l *Listener[T]) Resolve(key string, data T) {
 	val, ok := l.store.Load(key)
 	if !ok {
 		return
@@ -60,6 +60,6 @@ func (l *listener[T]) Resolve(key string, data T) {
 }
 
 // Remove: cleanup manual
-func (l *listener[T]) Remove(key string) {
+func (l *Listener[T]) Remove(key string) {
 	l.store.Delete(key)
 }

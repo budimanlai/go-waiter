@@ -72,11 +72,13 @@ func (l *Listener[T]) RequestWithKey(ctx context.Context, key string, send func(
 	l.Register(key)
 
 	err := send(key)
+
 	if err != nil {
 		l.Remove(key)
 		var zero T
 		return zero, err
 	}
+
 	return l.Listen(ctx, key)
 }
 

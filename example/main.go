@@ -17,10 +17,11 @@ func main() {
 func runRequest() {
 	l := waiter.NewWaiter[string]()
 
-	resp, err := l.Request(context.Background(), func(key string) {
+	resp, err := l.Request(context.Background(), func(key string) error {
 		fmt.Println("Simulating work... " + key)
 		time.Sleep(3 * time.Second)
 		l.Resolve(key, "Hello, World!")
+		return nil
 	})
 	if err != nil {
 		fmt.Println("Error:", err)

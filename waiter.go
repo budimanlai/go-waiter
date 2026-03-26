@@ -68,21 +68,26 @@ func (l *Listener[T]) Remove(key string) {
 }
 
 // RequestWithKey: helper buat register, send, dan listen sekaligus
-func (l *Listener[T]) RequestWithKey(ctx context.Context, key string, send func(key string)) (T, error) {
+func (l *Listener[T]) RequestWithKey(ctx context.Context, key string, send func(key string) error) (T, error) {
 	l.Register(key)
 
-	send(key)
+	err := send(key)
+	if err != nil {
+		l.Remove(key)
+		var zero T
+		return zero, err
+	}
 	return l.Listen(ctx, key)
 }
 
 // Request: helper buat register, send, dan listen sekaligus
-func (l *Listener[T]) Request(ctx context.Context, send func(key string)) (T, error) {
+func (l *Listener[T]) Request(ctx context.Context, send func(key string) error) (T, error) {
 	key := uuid.New().String()
 	return l.RequestWithKey(ctx, key, send)
 }
 
 // RequestWithKeyAndTimeout: helper buat register, send, dan listen sekaligus dengan timeout
-func (l *Listener[T]) RequestWithKeyAndTimeout(key string, timeout time.Duration, send func(key string)) (T, error) {
+func (l *Listener[T]) RequestWithKeyAndTimeout(key string, timeout time.Duration, send func(key string) error) (T, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -90,7 +95,7 @@ func (l *Listener[T]) RequestWithKeyAndTimeout(key string, timeout time.Duration
 }
 
 // RequestWithTimeout: helper buat register, send, dan listen sekaligus dengan timeout
-func (l *Listener[T]) RequestWithTimeout(timeout time.Duration, send func(key string)) (T, error) {
+func (l *Listener[T]) RequestWithTimeout(timeout time.Duration, send func(key string) error) (T, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
